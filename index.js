@@ -93,17 +93,16 @@ definitions:
 */
 
 app.get('/agents', (req, res) => {
-        pool.query('SELECT * from agents')
+        pool.query('SELECT * from sample.agents')
                 .then(result => {
-                        console.log(result);
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'Application/json');
                         res.send(result);
                 })
                 .catch(err => {
                         res.statusCode = 404;
-                        res.setHeader('Content-Type', 'text/plain');
-                        res.send('Error executing query');
+                        res.setHeader('Content-Type', 'Application/json');
+                        res.send({ error: "Error executing query" });
                 });
 });
 
@@ -136,27 +135,36 @@ app.get('/agents', (req, res) => {
 *                  $ref: '#/definitions/agent'
 *      201:
 *       description: Creation of agent failed
+*      400:
+*       description: Bad Request (Fields are incorrect or missing)
 *      404:
 *       description: Error executing query
 */
 app.post('/agents', (req, res) => {
-        pool.query(`insert into sample.agents values ('${req['body'].agentCode}', '${req['body'].agentName}', '${req['body'].workingArea}', '${req['body'].commission}', '${req['body'].phoneNo}', '${req['body'].country}')`)
-                .then(result => {
-                        if (result.affectedRows > 0) {
-                                res.statusCode = 200;
+        const agent = req.body;
+        if (!agent.agentCode || !agent.agentName || !agent.workingArea || !agent.commission || !agent.phoneNo || !agent.country) {
+                res.statusCode = 400;
+                res.send({ error: "Bad Request (Fields are incorrect or missing)" });
+        } else {
+                pool.query(`insert into sample.agents values ('${agent.agentCode}', '${agent.agentName}', '${agent.workingArea}', '${agent.commission}', '${agent.phoneNo}', '${agent.country}')`)
+                        .then(result => {
+                                if (result.affectedRows > 0) {
+                                        res.statusCode = 200;
+                                        res.setHeader('Content-Type', 'Application/json');
+                                        res.send(result);
+                                } else {
+                                        res.statusCode = 201;
+                                        res.setHeader('Content-Type', 'Application/json');
+                                        res.send({ error: "Operation  unsuccessful" });
+                                }
+                        })
+                        .catch(err => {
+                                res.statusCode = 404;
                                 res.setHeader('Content-Type', 'Application/json');
-                                res.send(result);
-                        } else {
-                                res.statusCode = 201;
-                                res.setHeader('Content-Type', 'text/plain');
-                                res.send("Operation  unsuccessful");
-                        }
-                })
-                .catch(err => {
-                        res.statusCode = 404;
-                        res.setHeader('Content-Type', 'text/plain');
-                        res.send('Error executing query');
-                });
+                                res.send({ error: "Error executing query" });
+                        });
+        }
+
 });
 
 /**
@@ -197,28 +205,36 @@ app.post('/agents', (req, res) => {
 *                  $ref: '#/definitions/agent'
 *      201:
 *       description: Updation of agent failed
+*      400:
+*       description: Bad Request (Fields are incorrect or missing)
 *      404:
 *       description: Error executing query
 */
 app.put('/agents', (req, res) => {
-        pool.query(`update sample.agents set agent_name = '${req['body'].agentName}',  working_area = '${req['body'].workingArea}', commission  = '${req['body'].commission}', phone_no = '${req['body'].phoneNo}', country = '${req['body'].country}' where agent_code = '${req['body'].agentCode}'`)
-                .then(result => {
-                        if (result.affectedRows > 0) {
-                                res.statusCode = 200;
+        const agent = req.body;
+        if (!agent.agentCode || !agent.agentName || !agent.workingArea || !agent.commission || !agent.phoneNo || !agent.country) {
+                res.statusCode = 400;
+                res.send({ error: "Bad Request (Fields are incorrect or missing)" });
+        } else {
+                pool.query(`update sample.agents set agent_name = '${agent.agentName}',  working_area = '${agent.workingArea}', commission  = '${agent.commission}', phone_no = '${agent.phoneNo}', country = '${agent.country}' where agent_code = '${agent.agentCode}'`)
+                        .then(result => {
+                                if (result.affectedRows > 0) {
+                                        res.statusCode = 200;
+                                        res.setHeader('Content-Type', 'Application/json');
+                                        res.send(result);
+                                }
+                                else {
+                                        res.statusCode = 201;
+                                        res.setHeader('Content-Type', 'Application/json');
+                                        res.send({ error: "Operation  unsuccessful" });
+                                }
+                        })
+                        .catch(err => {
+                                res.statusCode = 404;
                                 res.setHeader('Content-Type', 'Application/json');
-                                res.send(result);
-                        }
-                        else {
-                                res.statusCode = 201;
-                                res.setHeader('Content-Type', 'text/plain');
-                                res.send("Operation  unsuccessful");
-                        }
-                })
-                .catch(err => {
-                        res.statusCode = 404;
-                        res.setHeader('Content-Type', 'text/plain');
-                        res.send('Error executing query');
-                });
+                                res.send({ error: "Error executing query" });
+                        });
+        }
 });
 
 /**
@@ -259,43 +275,51 @@ app.put('/agents', (req, res) => {
 *                  $ref: '#/definitions/agent'
 *      201:
 *       description: Updation of agent failed
+*      400:
+*       description: Bad Request (Fields are incorrect or missing)
 *      404:
 *       description: Error executing query
 */
 app.patch('/agents', (req, res) => {
-        pool.query(`update sample.agents set agent_name = '${req['body'].agentName}',  working_area = '${req['body'].workingArea}', commission  = '${req['body'].commission}', phone_no = '${req['body'].phoneNo}', country = '${req['body'].country}' where agent_code = '${req['body'].agentCode}'`)
-                .then(result => {
-                        if (result.affectedRows > 0) {
-                                res.statusCode = 200;
-                                res.setHeader('Content-Type', 'Application/json');
-                                res.send(result);
-                        }
-                        else {
-                                pool.query(`insert into sample.agents values('${req['body'].agentCode}', '${req['body'].agentName}', '${req['body'].workingArea}', '${req['body'].commission}', '${req['body'].phoneNo}', '${req['body'].country}')`)
-                                        .then(res1 => {
-                                                if (res1.affectedRows > 0) {
-                                                        res.statusCode = 200;
+        const agent = req.body;
+        if (!agent.agentCode || !agent.agentName || !agent.workingArea || !agent.commission || !agent.phoneNo || !agent.country) {
+                res.statusCode = 400;
+                res.send({ error: "Bad Request (Fields are incorrect or missing)" });
+        } else {
+                pool.query(`update sample.agents set agent_name = '${agent.agentName}',  working_area = '${agent.workingArea}', commission  = '${agent.commission}', phone_no = '${agent.phoneNo}', country = '${agent.country}' where agent_code = '${agent.agentCode}'`)
+                        .then(result => {
+                                if (result.affectedRows > 0) {
+                                        res.statusCode = 200;
+                                        res.setHeader('Content-Type', 'Application/json');
+                                        res.send(result);
+                                }
+                                else {
+                                        pool.query(`insert into sample.agents values('${agent.agentCode}', '${agent.agentName}', '${agent.workingArea}', '${agent.commission}', '${agent.phoneNo}', '${agent.country}')`)
+                                                .then(res1 => {
+                                                        if (res1.affectedRows > 0) {
+                                                                res.statusCode = 200;
+                                                                res.setHeader('Content-Type', 'Application/json');
+                                                                res.send(res1);
+                                                        }
+                                                        else {
+                                                                res.statusCode = 201;
+                                                                res.setHeader('Content-Type', 'Application/json');
+                                                                res.send({ error: "Operation  unsuccessful" });
+                                                        }
+                                                })
+                                                .catch(err => {
+                                                        res.statusCode = 404;
                                                         res.setHeader('Content-Type', 'Application/json');
-                                                        res.send(res1);
-                                                }
-                                                else {
-                                                        res.statusCode = 201;
-                                                        res.setHeader('Content-Type', 'text/plain');
-                                                        res.send("Operation  unsuccessful");
-                                                }
-                                        })
-                                        .catch(err => {
-                                                res.statusCode = 404;
-                                                res.setHeader('Content-Type', 'text/plain');
-                                                res.send('Error executing query');
-                                        });
-                        }
-                })
-                .catch(err => {
-                        res.statusCode = 404;
-                        res.setHeader('Content-Type', 'text/plain');
-                        res.send('Error executing query');
-                });
+                                                        res.send({ error: "Error executing query" });
+                                                });
+                                }
+                        })
+                        .catch(err => {
+                                res.statusCode = 404;
+                                res.setHeader('Content-Type', 'Application/json');
+                                res.send({ error: "Error executing query" });
+                        });
+        }
 });
 
 /**
@@ -320,28 +344,36 @@ app.patch('/agents', (req, res) => {
 *       description: The agent was successfully deleted
 *      201:
 *       description: Deletion of agent failed
+*      400:
+*       description: Bad Request (Fields are incorrect or missing)
 *      404:
 *       description: Error executing query
 */
 app.delete('/agents', (req, res) => {
-        console.log(`${req['query'].agentCode}`);
-        pool.query(`delete from sample.agents where agent_Code =  ('${req['query'].agentCode}')`)
-        .then(result => {
-                if (result.affectedRows > 0) {
-                        res.statusCode = 200;
-                        res.setHeader('Content-Type', 'Application/json');
-                        res.send(result);
-                } else {
-                        res.statusCode = 201;
-                        res.setHeader('Content-Type', 'text/plain');
-                        res.send('Operation unsuccessful');
-                }
-        })
-                .catch(err => {
-                        res.statusCode = 404;
-                        res.setHeader('Content-Type', 'text/plain');
-                        res.send('Error executing query');
-                });
+        const agentCode = req.query.agentCode
+        if (!agentCode) {
+                res.statusCode = 400;
+                res.send({ error: "Bad Request (Fields are incorrect or missing)" });
+        } else {
+                pool.query(`delete from sample.agents where agent_Code =  "${req['query'].agentCode}" `)
+                        .then(result => {
+                                if (result.affectedRows > 0) {
+                                        res.statusCode = 200;
+                                        res.setHeader('Content-Type', 'Application/json');
+                                        res.send(result);
+                                } else {
+                                        res.statusCode = 201;
+                                        res.setHeader('Content-Type', 'Application/json');
+                                        res.send({error: "Operation unsuccessful"});
+                                }
+                        })
+                        .catch(err => {
+                                res.statusCode = 404;
+                                res.setHeader('Content-Type', 'Application/json');
+                                res.send({ error: "Error executing query" });
+                        });
+
+        }
 });
 
 
