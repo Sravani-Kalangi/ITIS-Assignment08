@@ -17,6 +17,8 @@ const pool = mariadb.createPool({
         connectionLimit: 5
 });
 
+var axios = require('axios');
+
 app.use(bodyParser.json());
 
 const options = {
@@ -26,7 +28,7 @@ const options = {
                         version: '1.0.0',
                         description: 'API designed as part of ITIS 6177 - Assignment 08'
                 },
-                host: '137.184.136.156:3000',
+                host: '137.184.106.179:3000',
                 basePath: '/',
         },
         apis: ['./index.js'],
@@ -106,6 +108,49 @@ app.get('/agents', (req, res) => {
                 });
 });
 
+/**
+* @swagger
+* /say:
+*     get:
+*       description: Returns a hello message
+*       produces:
+*          - text/plain
+*       parameters: 
+*          - in: query
+*            name: keyword
+*            description: keyword
+*            example: hi
+*            required: true
+*            schema:
+*              type: string
+*       responses:
+*          200:
+*              description: Object containing array of agent objects
+*          400:
+*              description: Improper request parameters
+*          404:
+*              description: Error executing query
+*/
+
+app.get('/say', (req, res) => {
+        if(req.query.keyword){
+                axios.get('https://2dp28mh1wf.execute-api.us-east-1.amazonaws.com/default/say?keyword=' + req.query.keyword)
+                .then(response=>{
+                        res.statusCode = response.status;
+                        res.setHeader('Content-Type', 'text/plain');
+                        res.send(response.data);
+                })
+                .catch(err=>{
+                        res.statusCode=404;
+                        res.setHeader('Content-Type', 'text/plain');
+                        res.send("Error executing query");
+                })
+        }else{
+                res.statusCode= 400;
+                res.setHeader('Content-Type', 'text/plain');
+                res.send('Please pass the request parameters like ?keyword=hello in the request');
+        }      
+});
 
 /**
 * @swagger
@@ -169,7 +214,7 @@ app.post('/agents', (req, res) => {
 
 /**
 * @swagger
-* /agents?agentCode=:
+* /agents:
 *  put:
 *    description: Updates agents
 *    consumes: 
@@ -324,7 +369,7 @@ app.patch('/agents', (req, res) => {
 
 /**
 * @swagger
-* /agents?agentCode=:
+* /agents:
 *  delete:
 *    description: Removes agent
 *    consumes: 
@@ -364,7 +409,7 @@ app.delete('/agents', (req, res) => {
                                 } else {
                                         res.statusCode = 201;
                                         res.setHeader('Content-Type', 'Application/json');
-                                        res.send({error: "Operation unsuccessful"});
+                                        res.send({ error: "Operation unsuccessful" });
                                 }
                         })
                         .catch(err => {
@@ -378,5 +423,5 @@ app.delete('/agents', (req, res) => {
 
 
 app.listen(port, () => {
-        console.log(`API served at http://137.184.136.156:${port}`);
+        console.log(`API served at http://137.184.106.179:${port}`);
 })
